@@ -44,13 +44,13 @@ export default function RightPanel() {
       // Draw earth circle
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = '#080c10';
+      ctx.fillStyle = '#000a00';
       ctx.fill();
       ctx.lineWidth = 1;
-      ctx.strokeStyle = '#1a3a4a';
+      ctx.strokeStyle = '#0f4a0f';
       ctx.stroke();
 
-      ctx.strokeStyle = '#0d2a35';
+      ctx.strokeStyle = '#002a00';
       ctx.lineWidth = 0.5;
 
       // Latitudes
@@ -102,11 +102,11 @@ export default function RightPanel() {
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#080c10';
+    ctx.fillStyle = '#000a00';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Horiz grid
-    ctx.strokeStyle = '#0d1a20';
+    ctx.strokeStyle = '#001a00';
     ctx.lineWidth = 1;
     for (let y = 0; y < canvas.height; y += 20) {
       ctx.beginPath();
@@ -134,11 +134,11 @@ export default function RightPanel() {
       ctx.stroke();
     };
 
-    drawLine(netHistoryTx, '#1a5a3a');
-    drawLine(netHistoryRx, '#1a3a5a');
+    drawLine(netHistoryTx, '#0f8a0f');
+    drawLine(netHistoryRx, '#0f4a0f');
 
     // Labels
-    ctx.fillStyle = '#2a5a6a';
+    ctx.fillStyle = '#1f6a1f';
     ctx.font = '9px "JetBrains Mono"';
     ctx.textAlign = 'right';
     ctx.fillText('0.21', canvas.width - 5, 10);
@@ -147,11 +147,11 @@ export default function RightPanel() {
   }, [netHistoryTx, netHistoryRx]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '245px', color: '#7a9aaa' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '245px', color: '#4aaa4a' }}>
       <style>{`
-        .right-sec { border-bottom: 1px solid #1a2a35; }
-        .tiny-label { font-size: 9px; color: #2a5a6a; }
-        .tiny-val { font-size: 9px; color: #7a9aaa; }
+        .right-sec { border-bottom: 1px solid #0f3a0f; }
+        .tiny-label { font-size: 9px; color: #1f6a1f; }
+        .tiny-val { font-size: 9px; color: #4aaa4a; }
         .flex-row { display: flex; flex-direction: row; }
         .flex-col { display: flex; flex-direction: column; }
       `}</style>

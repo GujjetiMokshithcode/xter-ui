@@ -36,10 +36,10 @@ export default function Terminal() {
 
         const xterm = new XTerm({
           theme: {
-            background: '#0a0f14',
-            foreground: '#9ab4be',
+            background: '#051405',
+            foreground: '#6aba6a',
             cursor: '#c9d1d9',
-            selectionBackground: '#1a3a4a'
+            selectionBackground: '#0f4a0f'
           },
           fontFamily: "'JetBrains Mono', monospace",
           fontSize: 13,
@@ -107,18 +107,18 @@ export default function Terminal() {
           font-size: 10px;
           letter-spacing: 2px;
           text-transform: uppercase;
-          border-right: 1px solid #1a2a35;
+          border-right: 1px solid #0f3a0f;
           cursor: pointer;
           user-select: none;
         }
         .term-tab.inactive {
-          background: #080c10;
-          color: #2a5a6a;
+          background: #000a00;
+          color: #1f6a1f;
         }
         .term-tab.active {
-          background: #0a0f14;
-          color: #8ab4be;
-          border-top: 2px solid #2a6a7a;
+          background: #051405;
+          color: #5aca5a;
+          border-top: 2px solid #1f8a1f;
         }
         .term-tab:last-child {
           border-right: none;
@@ -126,7 +126,7 @@ export default function Terminal() {
       `}</style>
 
       {/* TABS */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #1a2a35' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid #0f3a0f' }}>
         {tabs.map((tab, i) => (
           <div 
             key={i} 
@@ -145,12 +145,12 @@ export default function Terminal() {
 
       {/* BOTTOM STATUS BAR */}
       <div style={{ 
-        height: '24px', borderTop: '1px solid #1a2a35', background: '#080c10',
+        height: '24px', borderTop: '1px solid #0f3a0f', background: '#000a00',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '0 10px', fontSize: '9px'
       }}>
-        <div style={{ color: '#2a6a7a' }}>{cwd}/eDEX-UI</div>
-        <div style={{ color: '#2a5a6a' }}>{timeStr}</div>
+        <div style={{ color: '#1f8a1f' }}>{cwd}/eDEX-UI</div>
+        <div style={{ color: '#1f6a1f' }}>{timeStr}</div>
       </div>
     </div>
   )

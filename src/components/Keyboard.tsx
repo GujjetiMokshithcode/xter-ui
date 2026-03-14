@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const KEY_ROWS: any[] = [
   [
@@ -48,7 +48,6 @@ const KEY_ROWS: any[] = [
     { id: ';', main: ';', sec: ':' },
     { id: "'", main: "'", sec: '"' },
     { id: '\\', main: '\\', sec: '|' },
-    // Enter key empty space since it spans rows
   ],
   [
     { id: 'SHIFT_L', main: 'SHIFT', sec: '', flex: 2.5 },
@@ -68,7 +67,7 @@ const KEY_ROWS: any[] = [
   [
     { id: 'CTRL_L', main: 'CTRL', sec: '', flex: 1.5 },
     { id: 'FN', main: 'FN', sec: '', flex: 1.5 },
-    { id: 'SPACE', main: '', sec: '', flex: 6, bg: '#0d1520', border: '#2a5a6a' },
+    { id: 'SPACE', main: '', sec: '', flex: 6, bg: '#001500', border: '#1f6a1f' },
     { id: 'ALT GR', main: 'ALT GR', sec: '', flex: 1.5 },
     { id: 'CTRL_R', main: 'CTRL', sec: '', flex: 1.5 },
     { id: 'LEFT', main: '⬅', sec: '' },
@@ -78,51 +77,61 @@ const KEY_ROWS: any[] = [
   ]
 ]
 
-export default function Keyboard() {
-  const [caps, setCaps] = useState(false)
-  const [shift, setShift] = useState(false)
+const KEY_CODE_MAP: Record<string, string> = {
+  'Escape': 'ESC',
+  'Backquote': '`',
+  'Digit1': '1', 'Digit2': '2', 'Digit3': '3', 'Digit4': '4', 'Digit5': '5', 'Digit6': '6', 'Digit7': '7', 'Digit8': '8', 'Digit9': '9', 'Digit0': '0',
+  'Minus': '-', 'Equal': '=', 'Backspace': 'BACK',
+  'Tab': 'TAB',
+  'KeyQ': 'Q', 'KeyW': 'W', 'KeyE': 'E', 'KeyR': 'R', 'KeyT': 'T', 'KeyY': 'Y', 'KeyU': 'U', 'KeyI': 'I', 'KeyO': 'O', 'KeyP': 'P',
+  'BracketLeft': '[', 'BracketRight': ']', 'Backslash': '\\', 'Enter': 'ENTER', 'NumpadEnter': 'ENTER',
+  'CapsLock': 'CAPS',
+  'KeyA': 'A', 'KeyS': 'S', 'KeyD': 'D', 'KeyF': 'F', 'KeyG': 'G', 'KeyH': 'H', 'KeyJ': 'J', 'KeyK': 'K', 'KeyL': 'L',
+  'Semicolon': ';', 'Quote': "'",
+  'ShiftLeft': 'SHIFT_L', 'IntlBackslash': '<', 'KeyZ': 'Z', 'KeyX': 'X', 'KeyC': 'C', 'KeyV': 'V', 'KeyB': 'B', 'KeyN': 'N', 'KeyM': 'M', 'Comma': ',', 'Period': '.', 'Slash': '/', 'ShiftRight': 'SHIFT_R',
+  'ControlLeft': 'CTRL_L', 'MetaLeft': 'FN', 'AltLeft': 'FN',
+  'Space': 'SPACE',
+  'AltRight': 'ALT GR', 'ControlRight': 'CTRL_R',
+  'ArrowLeft': 'LEFT', 'ArrowDown': 'DOWN', 'ArrowRight': 'RIGHT', 'ArrowUp': 'UP'
+}
 
-  const handleKeyClick = (key: any) => {
-    let char = key.main
-    
-    if (key.id === 'CAPS') { setCaps(!caps); return; }
-    if (key.id === 'SHIFT_L' || key.id === 'SHIFT_R') { setShift(true); return; }
-    
-    // special replacements
-    if (key.id === 'SPACE') char = ' '
-    else if (key.id === 'BACK') char = '\x7f'
-    else if (key.id === 'ENTER') char = '\r'
-    else if (key.id === 'TAB') char = '\t'
-    else if (key.id === 'ESC') char = '\x1b'
-    else if (key.id === 'LEFT') char = '\x1b[D'
-    else if (key.id === 'RIGHT') char = '\x1b[C'
-    else if (key.id === 'UP') char = '\x1b[A'
-    else if (key.id === 'DOWN') char = '\x1b[B'
-    else {
-      // Normal char logic
-      if (shift && key.sec) {
-        char = key.sec
-      } else if (char.length === 1) {
-        const isLetter = char >= 'A' && char <= 'Z'
-        if (isLetter) {
-          const u = caps !== shift // XOR
-          char = u ? char : char.toLowerCase()
-        }
+export default function Keyboard() {
+  const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const mappedId = KEY_CODE_MAP[e.code]
+      if (mappedId) {
+        setPressedKeys(prev => {
+          const next = new Set(prev)
+          next.add(mappedId)
+          return next
+        })
       }
     }
 
-    if (window.electronAPI) {
-      window.electronAPI.terminal.input('main', char)
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const mappedId = KEY_CODE_MAP[e.code]
+      if (mappedId) {
+        setPressedKeys(prev => {
+          const next = new Set(prev)
+          next.delete(mappedId)
+          return next
+        })
+      }
     }
 
-    // Reset shift if used
-    if (shift && key.id !== 'SHIFT_L' && key.id !== 'SHIFT_R') {
-      setShift(false)
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
+    window.addEventListener('keyup', handleKeyUp, { capture: true })
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, { capture: true })
+      window.removeEventListener('keyup', handleKeyUp, { capture: true })
     }
-  }
+  }, [])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', background: '#0a0f14', borderLeft: '1px solid #1a2a35' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', background: '#051405', borderLeft: '1px solid #0f3a0f' }}>
       <style>{`
         .kbd-row {
           display: flex;
@@ -131,44 +140,34 @@ export default function Keyboard() {
           justify-content: center;
         }
         .kbd-key {
-          background: #080c10;
-          border: 1px solid #1e3a4a;
-          color: #4a7a8a;
+          background: #000a00;
+          border: 1px solid #144a14;
+          color: #2a8a2a;
           font-size: 10px;
           height: 42px;
           min-width: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          cursor: pointer;
           position: relative;
           user-select: none;
+          transition: all 0.05s ease;
         }
-        .kbd-key:hover {
-          background: #0d1520;
-          color: #8ab4be;
-        }
-        .kbd-key:active {
-          background: #1a3a4a;
-          color: #c9d1d9;
+        .kbd-key.active {
+          background: #0f4a0f !important;
+          color: #c9d1d9 !important;
+          transform: scale(0.95);
         }
         .kbd-sec {
           position: absolute;
           top: 2px;
           right: 4px;
           font-size: 7px;
-          color: #2a4a5a;
+          color: #1f5a1f;
         }
         .kbd-main {
-          margin-top: ${/* If there's a sec label, shift main down a bit */ '0'};
+          margin-top: 0;
         }
-        
-        /* The magical ENTER key span trick via negative margin hack, 
-           or we can just use position absolute/relative. CSS Grid is better but we use flex rows. 
-           Let's use absolute positioning relative to the container for the enter key to span cleanly 
-           in a flex layout, or just a negative margin on the row below?
-           Wait, simple way: width fixed, height 90px, float right, or position absolute inside its wrapper.
-        */
         .enter-key {
           position: absolute;
           right: 10px;
@@ -182,27 +181,22 @@ export default function Keyboard() {
         {KEY_ROWS.map((row, rIdx) => (
           <div key={rIdx} className="kbd-row" style={{ paddingRight: rIdx === 1 || rIdx === 2 ? '106px' : '10px' }}>
             {row.map((key: any) => {
+              const isActive = pressedKeys.has(key.id)
+              
               if (key.isEnter) {
                 return (
-                  <div key={key.id} className="kbd-key enter-key" onClick={() => handleKeyClick(key)}>
+                  <div key={key.id} className={`kbd-key enter-key ${isActive ? 'active' : ''}`}>
                     <span className="kbd-main">{key.main}</span>
                   </div>
                 )
               }
               
-              const isCapsActive = caps && key.id === 'CAPS'
-              const isShiftActive = shift && (key.id === 'SHIFT_L' || key.id === 'SHIFT_R')
-              
               const inlineStyle: any = { flex: key.flex || 1 }
-              if (key.bg) inlineStyle.background = key.bg
+              if (key.bg && !isActive) inlineStyle.background = key.bg
               if (key.border) inlineStyle.borderColor = key.border
-              if (isCapsActive || isShiftActive) {
-                inlineStyle.background = '#1a3a4a'
-                inlineStyle.color = '#c9d1d9'
-              }
 
               return (
-                <div key={key.id} className="kbd-key" style={inlineStyle} onClick={() => handleKeyClick(key)}>
+                <div key={key.id} className={`kbd-key ${isActive ? 'active' : ''}`} style={inlineStyle}>
                   {key.sec && <span className="kbd-sec">{key.sec}</span>}
                   <span className="kbd-main">{key.main}</span>
                 </div>

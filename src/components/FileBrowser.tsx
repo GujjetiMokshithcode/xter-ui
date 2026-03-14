@@ -49,7 +49,7 @@ export default function FileBrowser() {
           cursor: pointer;
         }
         .fs-item:hover {
-          background: #0d1a20;
+          background: #001a00;
         }
         .fs-icon-wrap {
           width: 32px;
@@ -60,12 +60,12 @@ export default function FileBrowser() {
           font-family: monospace;
           font-size: 24px;
         }
-        .fs-icon-folder { color: #2a6a7a; }
-        .fs-icon-file { color: #1a5a6a; }
+        .fs-icon-folder { color: #1f8a1f; }
+        .fs-icon-file { color: #0f6a0f; }
         
         .fs-name {
           font-size: 9px;
-          color: #6a8a9a;
+          color: #3a8a3a;
           margin-top: 4px;
           max-width: 45px;
           overflow: hidden;
@@ -92,9 +92,9 @@ export default function FileBrowser() {
       </div>
 
       <div style={{
-        height: '22px', borderTop: '1px solid #1a2a35', background: '#050810',
+        height: '22px', borderTop: '1px solid #0f3a0f', background: '#000800',
         display: 'flex', alignItems: 'center', padding: '0 10px',
-        fontSize: '9px', color: '#2a5a6a'
+        fontSize: '9px', color: '#1f6a1f'
       }}>
         Mount /home/squared used 71%
       </div>

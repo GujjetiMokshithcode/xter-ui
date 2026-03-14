@@ -59,11 +59,11 @@ export default function LeftPanel() {
       if (!ctx) return
       
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.fillStyle = '#080c10'
+      ctx.fillStyle = '#000a00'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       
       ctx.beginPath()
-      ctx.strokeStyle = '#2a6a5a'
+      ctx.strokeStyle = '#1f8a1f'
       ctx.lineWidth = 1
       
       const sliceWidth = canvas.width / (history.length - 1)
@@ -107,7 +107,7 @@ export default function LeftPanel() {
       squares.push(
         <div key={i} style={{
           width: '3px', height: '3px',
-          background: i < filledCount ? '#1a5a4a' : '#0d1a20'
+          background: i < filledCount ? '#0f7a0f' : '#001a00'
         }}></div>
       );
     }
@@ -127,11 +127,11 @@ export default function LeftPanel() {
   const avgCpu2 = Math.round(cpuHistory2[cpuHistory2.length - 1] || 0)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '245px', color: '#7a9aaa' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '245px', color: '#4aaa4a' }}>
       <style>{`
-        .left-sec { border-bottom: 1px solid #1a2a35; }
-        .tiny-label { font-size: 9px; color: #2a5a6a; }
-        .tiny-val { font-size: 9px; color: #7a9aaa; }
+        .left-sec { border-bottom: 1px solid #0f3a0f; }
+        .tiny-label { font-size: 9px; color: #1f6a1f; }
+        .tiny-val { font-size: 9px; color: #4aaa4a; }
         .flex-row { display: flex; flex-direction: row; }
         .flex-col { display: flex; flex-direction: column; }
       `}</style>
@@ -207,8 +207,8 @@ export default function LeftPanel() {
       {/* 7. SWAP BAR */}
       <div className="left-sec flex-row justify-between items-center" style={{ padding: '6px 10px' }}>
         <span className="tiny-label">SWAP</span>
-        <div style={{ flex: 1, margin: '0 8px', height: '3px', background: '#0d1a20', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '15%', background: '#1a4a3a' }}></div>
+        <div style={{ flex: 1, margin: '0 8px', height: '3px', background: '#001a00', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '15%', background: '#0f5a0f' }}></div>
         </div>
         <span className="tiny-val">0.2 GiB</span>
       </div>
@@ -221,8 +221,8 @@ export default function LeftPanel() {
         <div className="flex-col" style={{ padding: '0 10px 10px 10px' }}>
           {sysStats.processes && sysStats.processes.map((p: any, i: number) => (
             <div key={i} className="flex-row" style={{ 
-              fontSize: '9px', color: '#6a8a9a', cursor: 'default', padding: '2px 0' 
-            }} onMouseEnter={e => e.currentTarget.style.background = '#0d1a20'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              fontSize: '9px', color: '#3a8a3a', cursor: 'default', padding: '2px 0' 
+            }} onMouseEnter={e => e.currentTarget.style.background = '#001a00'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <div style={{ width: '40px' }}>{Math.floor(Math.random() * 9000 + 1000)}</div>
               <div style={{ width: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
               <div style={{ width: '40px', textAlign: 'right' }}>{p.cpu.toFixed(1)}%</div>
@@ -230,7 +230,7 @@ export default function LeftPanel() {
             </div>
           ))}
           {!sysStats.processes || sysStats.processes.length === 0 && Array(5).fill(0).map((_,i) => (
-            <div key={i} className="flex-row" style={{ fontSize: '9px', color: '#6a8a9a', padding: '2px 0' }}>
+            <div key={i} className="flex-row" style={{ fontSize: '9px', color: '#3a8a3a', padding: '2px 0' }}>
               <div style={{ width: '40px' }}>----</div>
               <div style={{ width: '90px' }}>-------</div>
               <div style={{ width: '40px', textAlign: 'right' }}>-.--%</div>

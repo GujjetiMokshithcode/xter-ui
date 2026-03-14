@@ -17,7 +17,7 @@ export default function App() {
           width: 100vw;
           height: 100vh;
           overflow: hidden;
-          background: #0d1117;
+          background: #000000;
           font-family: 'JetBrains Mono', monospace;
           margin: 0;
           padding: 0;
@@ -34,12 +34,12 @@ export default function App() {
             "left      terminal  right"
             "filesystem keyboard  keyboard";
           gap: 0;
-          background: #080c10;
+          background: #000a00;
         }
 
         .app-grid > div {
-          border: 1px solid #1a2a35;
-          background: #0a0f14;
+          border: 1px solid #0f3a0f;
+          background: #051405;
           border-radius: 0;
           box-sizing: border-box;
           overflow: hidden;
@@ -53,19 +53,19 @@ export default function App() {
           width: 3px;
         }
         ::-webkit-scrollbar-track {
-          background: #080c10;
+          background: #000a00;
         }
         ::-webkit-scrollbar-thumb {
-          background: #1a3a4a;
+          background: #0f4a0f;
         }
         
         .panel-header {
           font-size: 9px;
           letter-spacing: 3px;
           text-transform: uppercase;
-          color: #2a5a6a;
+          color: #1f6a1f;
           padding: 5px 10px;
-          border-bottom: 1px solid #1a2a35;
+          border-bottom: 1px solid #0f3a0f;
           display: flex;
           justify-content: space-between;
         }
