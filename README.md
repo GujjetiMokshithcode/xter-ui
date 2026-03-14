@@ -1,112 +1,124 @@
-# XTER-UI
+# 🟢 XTER-UI v2.0
+> **The Ultimate Sci-Fi Terminal Emulator & System Monitor.**
 
-A fullscreen sci-fi terminal desktop application (heavily inspired by eDEX-UI) built with **Electron**, **React**, **TypeScript**, and **CSS Grid**. 
+[![Electron](https://img.shields.io/badge/Electron-30.0+-blue.svg)](https://www.electronjs.org/)
+[![React](https://img.shields.io/badge/React-18.0+-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-The goal of this project is to provide a fully functional, cyberpunk-themed heads-up display (HUD) that monitors system performance, interacts with the local filesystem, and provides a real terminal emulator using `node-pty`.
-
----
-
-## 🚀 Features
-
-1. **3-Stage Boot Sequence**
-   - Simulated hardware checks and initialization sequence.
-   - Stage 1: Fast-scrolling raw hex/kernel logs.
-   - Stage 2: Slow, deliberate system service mounting and verifications.
-   - Stage 3: ASCII Art logo reveal with "ACCESS GRANTED" authentications before transitioning to the main UI.
-
-2. **Main HUD Layout (CSS Grid)**
-   - Hardcoded `100vw` / `100vh` strictly structural CSS Grid layout.
-   - No flexbox-based master layouts; relies on `grid-template-areas` for precise panel sizing.
-   - **Theme**: Strict "Hackerman" Green aesthetic (`#000000`, `#000a00`, `#051405` backgrounds with `#4aaa4a`, `#5aca5a` accents).
-   - **Styling Rule**: Absolutely no `border-radius`, gradients, or box-shadows. Pure, sharp, utilitarian lines.
-
-3. **Real Terminal Engine**
-   - Integrates `xterm.js` and `xterm-addon-fit`.
-   - Backend logic powered by `node-pty` for real system shell access natively routed via Electron IPC.
-   - Tabbed interface supporting up to 5 concurrent sessions.
-
-4. **Live System Telemetry**
-   - Powered by `systeminformation`.
-   - **Left Panel**: Multi-core CPU tracking with historical scrolling Canvas graphs, RAM dot-matrix occupancy rendering, Swap bars, and live top processes list.
-   - **Right Panel**: Network traffic monitor with a rotating 3D wireframe Canvas globe and scrolling upload/download graphs.
-
-5. **Hardware-Mapped On-Screen Keyboard**
-   - Real-time visualization of physical hardware keystrokes mapped directly to the UI.
-   - Bypasses terminal event swallowing by using `{ capture: true }` listeners.
-
-6. **File Browser**
-   - Navigates the local filesystem, mapping extensions to specific ASCII/Unicode icons.
-   - Grid-based layout for dense information packaging.
+XTER-UI is a high-performance, fullscreen desktop application that transforms your workstation into a futuristic cyberpunk terminal. Heavily inspired by the aesthetics of *eDEX-UI*, it combines real system utilities with a meticulous visual design system.
 
 ---
 
-## 🧠 For AI Context & Future Developers
+## 📽️ Core Features
 
-This section serves as a technical context anchor for LLMs or developers continuing this project.
-
-### 1. Project Structure
-\`\`\`text
-xter-ui/
-├── electron/
-│   ├── main.ts         # Main process: Window management & IPC handlers
-│   └── preload.ts      # Exposes window.electronAPI context to the renderer
-├── src/
-│   ├── App.tsx         # Root layout container (CSS Grid orchestrator)
-│   ├── main.tsx        # React entry point
-│   ├── components/     # UI Panels (TopBar, LeftPanel, Terminal, RightPanel, Keyboard, FileBrowser, BootSequence)
-│   └── styles/
-│       └── hud.css     # Global variables and CSS Grid rules
-└── package.json        # Build scripts and dependencies
-\`\`\`
-
-### 2. IPC Channels (Electron ↔ React)
-The application strictly respects the Electron security model. The renderer never requires `fs` or `os` directly. Instead, `preload.ts` bridges them:
-- **`systeminformation`**: Polled in `main.ts`, pushed to the UI via `window.electronAPI.sysinfo.onUpdate()`.
-- **Terminal Management**: `window.electronAPI.terminal.start()`, `.input()`, and `.onOutput()` route keystrokes into `node-pty` and stream VT100 ANSI codes back to `xterm.js`.
-- **Window Controls**: Minimize, Maximize, and Close events.
-
-### 3. Styling Constraints
-If you are an AI generating new UI components:
-- **USE INLINE STYLES OR CSS CLASSES**: Tailwind is mostly abandoned in favor of explicit CSS and inline React styles.
-- **NO ROUNDED CORNERS**: `border-radius: 0` is a hard rule across the entire application.
-- **COLOR PALETTE**: Stick to the generated green schema.
-  - Background panels: `#0a0f14` was mapped to `#051405`
-  - Deep dark backgrounds: `#080c10` was mapped to `#000a00`
-  - Text accents: `#2a5a2a`, `#5aca5a`, `#c9d1d9`.
-  - Borders: `#0f3a0f` or `#0f4a0f` (`1px solid`).
-- **CANVAS**: Extensive use of `<canvas>` elements for high-performance waveforms. Ensure `ResizeObserver` or explicit `width/height` attributes are maintained so graphs do not blur.
-
-### 4. Component Behaviors
-- `BootSequence.tsx`: Runs entirely detached from the rest of the application using localized `setTimeout` chains and CSS animations. 
-- `Keyboard.tsx`: Does not actually type into the terminal; it acts purely as a visualizer. Physical keystroke mapping uses `KeyboardEvent.code` to maintain locale-agnostic bindings (e.g., `Space`, `KeyA`).
-- `Terminal.tsx`: The terminal manages its own state via `xterm.js`. Custom resize logic explicitly calls `addons.fit()` when the layout grid resizes.
+*   **⚡ 3-Stage Boot Sequence**: A high-fidelity initialization sequence featuring raw kernel logs, system service mounting, and ASCII logo authentication.
+*   **📐 Structural CSS Grid**: A strict `100vw/100vh` layout engine utilizing `grid-template-areas`. No rounding, no shadows, just pure structural efficiency.
+*   **📟 Real Terminal Engine**: Powered by `node-pty` and `xterm.js`, providing native shell access with 5 tabbed sessions.
+*   **📊 Live Telemetry**: 
+    *   **CPU**: Multi-core waveform visualizations rendered on HTML Canvas.
+    *   **Memory**: A real-time 192-node dot-matrix occupancy tracker.
+    *   **Network**: Global wireframe globe and traffic graphs.
+*   **⌨️ Interactive Visual Keyboard**: A hardware-mapped virtual keyboard with custom logic for tabbed shell interaction.
+*   **📂 Native File Explorer**: Programmatic icon rendering for folder navigation and disk usage monitoring.
 
 ---
 
-## 🛠 Setup Instructions
+## 🏗️ Technical Architecture
+
+XTER-UI follows a strict separation of concerns between the **Electron Main Process** (Backend/Hardware) and the **React Renderer** (Frontend/Display).
+
+```mermaid
+graph TD
+    subgraph "Main Process (Node.js)"
+        MP[main.ts] --> PTY[node-pty]
+        MP --> SI[systeminformation]
+        MP --> FS[fs / path]
+    end
+
+    subgraph "Preload Layer"
+        PRE[preload.ts] -- Context Bridge --> API[window.electronAPI]
+    end
+
+    subgraph "Renderer Process (React)"
+        API --> APP[App.tsx / CSS Grid]
+        APP --> TERM[Terminal.tsx]
+        APP --> LEFT[LeftPanel.tsx / Canvas Graphs]
+        APP --> RIGHT[RightPanel.tsx / 3D Globe]
+        APP --> KBD[Keyboard.tsx / Raw Input]
+    end
+
+    PTY <--> TERM
+    SI -- Live Updates --> LEFT & RIGHT
+```
+
+### 🧠 Logic Deep-Dive (For AI Agents & Developers)
+
+If you are an AI assistant or a developer contributing code, follow these internal logical patterns:
+
+#### 1. Data Flow (The "Push" Model)
+Avoid polling `systeminformation` in the frontend. `main.ts` maintains a 1-second interval loop that gathers telemetry and pushes it to the renderer via `webContents.send('sysinfo-update', data)`. 
+
+#### 2. Performance Engineering (Canvas vs DOM)
+*   **Waveforms & Graphs**: Always use `<canvas>`. React re-renders are too expensive for 60fps waveform animations.
+*   **The Globe**: Uses `requestAnimationFrame` and basic trigonometric projections to render a wireframe sphere without the overhead of WebGL.
+*   **Memory Dot Matrix**: Rendered via DOM nodes for accessibility, but optimized with React's `memo`.
+
+#### 3. Styling "The Law"
+The visual identity of XTER is non-negotiable. 
+- **Borders**: `1px solid var(--border)`
+- **Corners**: `border-radius: 0 !important`
+- **Fonts**: `JetBrains Mono, monospace`
+- **Coloring**: Use the mapped green variables in `hud.css`.
+
+#### 4. Terminal Lifecycle
+Terminals are NOT recreated on tab switch. They are initialized once and hidden/shown via `display: none`. This preserves session state. The `FitAddon` must be manually triggered on initialization and window resize.
+
+---
+
+## 🧪 Installation & Setup
 
 ### Prerequisites
-- Node.js (v18+ recommended)
-- Depending on your OS, you may need native build tools for `node-pty`:
-  - **Linux**: `make`, `python3`, `g++`
-  - **Windows**: Visual Studio Build Tools, `python`
-  - **Mac**: Xcode Command Line Tools
+- **Node.js**: v18.0.0 or higher.
+- **Native Tools**: Required for `node-pty` compilation.
+  - *Linux*: `sudo apt install build-essential python3`
+  - *macOS*: `xcode-select --install`
+  - *Windows*: `npm install --global windows-build-tools`
 
-### Installation
-1. Clone the repository and navigate into the `xter-ui/` directory.
-2. Install all dependencies:
-   \`\`\`bash
+### Getting Started
+1. **Clone & Install**:
+   ```bash
+   git clone https://github.com/your-repo/xter-ui.git
+   cd xter-ui
    npm install
-   \`\`\`
+   ```
 
-### Running Locally
-Run the app in development mode using concurrent Vite and Electron loaders:
-\`\`\`bash
-npm run dev
-\`\`\`
+2. **Development Mode**:
+   Launch concurrently with Vite HMR and Electron:
+   ```bash
+   npm run dev
+   ```
 
-### Building for Production
-To package the app for your current operating system into an installer (outputs to `dist/` or `release/`):
-\`\`\`bash
-npm run build
-\`\`\`
+3. **Build Binary**:
+   Compress for production:
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 📡 IPC API Reference
+Access these via `window.electronAPI`:
+
+| Method | Description |
+| :--- | :--- |
+| `terminal.create(id)` | Initializes a new PTY shell for a specific tab ID. |
+| `terminal.input(id, data)` | Pipes keystrokes or data into the backend shell. |
+| `terminal.onOutput(id, callback)` | Listens for shell output (ANSI codes). |
+| `sysinfo.onUpdate(callback)` | Global listener for telemetry (CPU, Mem, Net). |
+| `app.quit()` | Cleanly terminates the Electron process. |
+
+---
+
+## 📜 License
+MIT License. Feel free to fork and build your own HUD.
