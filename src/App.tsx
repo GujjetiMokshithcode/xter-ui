@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import BootSequence from './components/BootSequence'
-import TopBar from './components/TopBar'
-import Terminal from './components/Terminal'
-import FileBrowser from './components/FileBrowser'
-import LeftPanel from './components/LeftPanel'
-import RightPanel from './components/RightPanel'
-import Keyboard from './components/Keyboard'
+import TopBar from './components/TopBar.tsx'
+import Terminal from './components/Terminal.tsx'
+import FileBrowser from './components/FileBrowser.tsx'
+import LeftPanel from './components/LeftPanel.tsx'
+import RightPanel from './components/RightPanel.tsx'
+import Keyboard from './components/Keyboard.tsx'
 
 import './styles/hud.css'
 
