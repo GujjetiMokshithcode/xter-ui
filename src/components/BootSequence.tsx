@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 
 const bootLinesInfo = [
-  { type: "kernel", text: "NEXTERM OS v3.1.4 — Kernel 6.7.2-nexterm-amd64" },
+  { type: "kernel", text: "XTER-UI OS v3.1.4 — Kernel 6.7.2-xter-ui-amd64" },
   { type: "kernel", text: "Command line: BOOT_IMAGE=/vmlinuz-6.7.2 root=/dev/sda2 quiet" },
   { type: "kernel", text: "[    0.000000] Initializing cgroup subsys cpuset" },
   { type: "kernel", text: "[    0.000000] Linux version 6.7.2 (gcc version 13.2.0)" },
@@ -15,8 +15,8 @@ const bootLinesInfo = [
   { type: "ok", text: "Started Journal Service" },
   { type: "warn", text: "fsck warning: /dev/sdb1 has not been checked in 180 days" },
   { type: "ok", text: "Mounted /boot/efi" },
-  { type: "ok", text: "Started NEXTERM Interface Daemon" },
-  { type: "kernel", text: "[    2.210543] Loading NEXTERM security module" },
+  { type: "ok", text: "Started XTER-UI Interface Daemon" },
+  { type: "kernel", text: "[    2.210543] Loading XTER-UI security module" },
   { type: "system", text: "Verifying system integrity... SHA256 checksum OK" },
   { type: "system", text: "Decrypting filesystem overlay... done" },
   { type: "ok", text: "Started OpenSSH Server Daemon" },
@@ -26,11 +26,11 @@ const bootLinesInfo = [
   { type: "system", text: "Loading terminal emulator subsystem..." },
   { type: "system", text: "Binding IPC message channels... [3/3] OK" },
   { type: "system", text: "Mounting virtual filesystem... done" },
-  { type: "ok", text: "Started NEXTERM Process Monitor" },
+  { type: "ok", text: "Started XTER-UI Process Monitor" },
   { type: "system", text: "Calibrating system clock via NTP... synced" },
   { type: "system", text: "Loading user profile... done" },
   { type: "ready", text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" },
-  { type: "ready", text: "  NEXTERM v1.0.0 — ALL SYSTEMS OPERATIONAL" },
+  { type: "ready", text: "  XTER-UI v1.0.0 — ALL SYSTEMS OPERATIONAL" },
   { type: "ready", text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" }
 ]
 
@@ -256,7 +256,7 @@ export default function BootSequence({ onComplete }: { onComplete: () => void })
   ░░░██████████████░░░
   ░░░░░██░░░░░██░░░░░░
   ░░░░░░░░░░░░░░░░░░░░
-  ░N░E░X░T░E░R░M░░░░░░
+  ░X░T░E░R░-░U░I░░░░░░
   ░░S░Y░S░T░E░M░░░░░░░`}
             </pre>
             <div 

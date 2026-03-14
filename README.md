@@ -1,4 +1,4 @@
-# NexTerm
+# xter-ui
 
 A fullscreen sci-fi terminal desktop application (EDEX-UI clone MVP) built with Electron, React, TypeScript, and Tailwind CSS.
 
@@ -30,7 +30,7 @@ A fullscreen sci-fi terminal desktop application (EDEX-UI clone MVP) built with 
   - **Mac**: Xcode Command Line Tools
 
 ### Installation
-1. Clone the environment or open the directory `nexterm/`.
+1. Clone the environment or open the directory `xter-ui/`.
 2. Install all dependencies:
    ```bash
    npm install

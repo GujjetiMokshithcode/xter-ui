@@ -1,5 +1,5 @@
 {
-  "name": "nexterm",
+  "name": "xter-ui",
   "private": true,
   "version": "0.0.0",
   "main": "dist-electron/main.js",
@@ -45,8 +45,8 @@
     "wait-on": "^9.0.4"
   },
   "build": {
-    "appId": "com.nexterm.app",
-    "productName": "NexTerm",
+    "appId": "com.xter-ui.app",
+    "productName": "xter-ui",
     "directories": {
       "output": "release"
     },

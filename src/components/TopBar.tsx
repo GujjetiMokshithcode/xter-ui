@@ -40,7 +40,7 @@ export default function TopBar({ toggleKeyboard }: { toggleKeyboard: () => void 
       }}
     >
       <div className="flex space-x-4 items-center h-full">
-        <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>NEXTERM v1.0</span>
+        <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>XTER-UI v1.0</span>
         <span>{hostName}</span>
         <span>{ipAddr}</span>
       </div>
