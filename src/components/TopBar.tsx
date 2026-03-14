@@ -1,72 +1,63 @@
-import { useState, useEffect } from 'react'
 
-export default function TopBar({ toggleKeyboard }: { toggleKeyboard: () => void }) {
-  const [time, setTime] = useState<Date>(new Date())
-  const [appInfo, setAppInfo] = useState<{ hostname: string, ip: string } | null>(null)
 
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000)
-    
-    // Fetch correct machine telemetry on load
-    if (window.electronAPI) {
-      window.electronAPI.app.getInfo().then(info => {
-        setAppInfo({ hostname: info.hostname, ip: info.ip })
-      })
-    }
-
-    return () => clearInterval(timer)
-  }, [])
-
+export default function TopBar() {
   const quit = () => {
     if (window.electronAPI) {
-      window.electronAPI.app.quit()
+      window.electronAPI.app.quit();
     }
-  }
-
-  const timeStr = time.toLocaleTimeString('en-US', { hour12: false })
-  const hostName = appInfo?.hostname || 'undefined'
-  const ipAddr = appInfo?.ip || 'localhost'
+  };
 
   return (
-    <div 
-      className="flex justify-between items-center px-4 w-full select-none"
-      style={{
-        height: '28px',
-        background: 'var(--bg-panel)',
-        borderBottom: '1px solid var(--border-color)',
-        fontFamily: 'monospace',
-        fontSize: '11px',
-        color: 'var(--text-dim)'
-      }}
-    >
-      <div className="flex space-x-4 items-center h-full">
-        <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>XTER-UI v1.0</span>
-        <span>{hostName}</span>
-        <span>{ipAddr}</span>
+    <div style={{
+      height: '22px',
+      background: '#050810',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '0 10px',
+      borderBottom: '1px solid #1a2a35',
+      userSelect: 'none'
+    }}>
+      <style>{`
+        .topbar-section {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        .topbar-text {
+          font-size: 9px;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+        }
+        .topbar-divider {
+          border-left: 1px solid #1a2a35;
+          height: 14px;
+          margin: 0 8px;
+        }
+      `}</style>
+
+      <div className="topbar-section" style={{ justifyContent: 'flex-start', flex: 1 }}>
+        <span className="topbar-text" style={{ color: '#1a4a5a' }}>PANEL</span>
+        <span className="topbar-text" style={{ color: '#1a4a5a' }}>SYSTEM</span>
       </div>
 
-      <div className="flex space-x-6 items-center">
-        <span>{timeStr}</span>
-        
-        <button 
-          onClick={toggleKeyboard}
-          style={{ cursor: 'pointer', background: 'none', border: 'none', color: 'var(--text-dim)' }}
-          title="Toggle Keyboard"
-          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-dim)'}
-        >
-          [KBD]
-        </button>
+      <div className="topbar-section" style={{ justifyContent: 'center', gap: 0, flex: 1 }}>
+        <span className="topbar-text" style={{ color: '#2a6a7a' }}>TERMINAL</span>
+      </div>
 
+      <div className="topbar-section" style={{ justifyContent: 'flex-end', flex: 1 }}>
+        <span className="topbar-text" style={{ color: '#2a6a7a' }}>MAIN SHELL</span>
+        <div className="topbar-divider"></div>
+        <span className="topbar-text" style={{ color: '#1a4a5a' }}>PANEL</span>
+        <span className="topbar-text" style={{ color: '#1a4a5a' }}>NETWORK</span>
+        <div className="topbar-divider"></div>
         <button 
           onClick={quit}
-          style={{ cursor: 'pointer', background: 'none', border: 'none', color: 'var(--text-accent)' }}
-          title="System Shutdown"
-          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-accent)'}
-        >
-          ✕
-        </button>
+          style={{
+            background: 'none', border: 'none', color: '#2a4a5a', fontSize: '10px',
+            cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center'
+          }}
+        >✕</button>
       </div>
     </div>
   )

@@ -3,57 +3,101 @@ import BootSequence from './components/BootSequence'
 import TopBar from './components/TopBar'
 import Terminal from './components/Terminal'
 import FileBrowser from './components/FileBrowser'
-import SysStats from './components/SysStats'
+import LeftPanel from './components/LeftPanel'
+import RightPanel from './components/RightPanel'
 import Keyboard from './components/Keyboard'
-import './styles/hud.css'
 
 export default function App() {
   const [booting, setBooting] = useState(true)
-  const [oskVisible, setOskVisible] = useState(false)
-
-  const handleKeyPress = (char: string) => {
-    window.dispatchEvent(new CustomEvent('osk-input', { detail: char }))
-  }
 
   return (
     <>
+      <style>{`
+        html, body, #root {
+          width: 100vw;
+          height: 100vh;
+          overflow: hidden;
+          background: #0d1117;
+          font-family: 'JetBrains Mono', monospace;
+          margin: 0;
+          padding: 0;
+        }
+
+        .app-grid {
+          display: grid;
+          width: 100vw;
+          height: 100vh;
+          grid-template-rows: 22px 1fr 260px;
+          grid-template-columns: 245px 1fr 245px;
+          grid-template-areas:
+            "topbar    topbar    topbar"
+            "left      terminal  right"
+            "filesystem keyboard  keyboard";
+          gap: 0;
+          background: #080c10;
+        }
+
+        .app-grid > div {
+          border: 1px solid #1a2a35;
+          background: #0a0f14;
+          border-radius: 0;
+          box-sizing: border-box;
+          overflow: hidden;
+        }
+        
+        * {
+          border-radius: 0 !important;
+        }
+        
+        ::-webkit-scrollbar {
+          width: 3px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #080c10;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #1a3a4a;
+        }
+        
+        .panel-header {
+          font-size: 9px;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+          color: #2a5a6a;
+          padding: 5px 10px;
+          border-bottom: 1px solid #1a2a35;
+          display: flex;
+          justify-content: space-between;
+        }
+      `}</style>
+      
       {booting && <BootSequence onComplete={() => setBooting(false)} />}
       
       {!booting && (
-        <div style={{
-          display: 'grid',
-          gridTemplateRows: '28px 1fr',
-          gridTemplateColumns: '220px 1fr 240px',
-          width: '100vw',
-          height: '100vh',
-          background: '#0d1117',
-          overflow: 'hidden'
-        }}>
-          <div style={{ gridColumn: '1 / -1' }}>
-             <TopBar toggleKeyboard={() => setOskVisible(!oskVisible)} />
+        <div className="app-grid">
+          <div style={{ gridArea: 'topbar', borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
+             <TopBar />
           </div>
 
-          <div className="flex flex-col h-full border-r border-[#1e3a4a]">
-            <div className="flex-1 overflow-hidden border-b border-[#1e3a4a]">
-              <SysStats />
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <FileBrowser />
-            </div>
+          <div style={{ gridArea: 'left', borderLeft: 'none', overflowY: 'auto' }}>
+            <LeftPanel />
           </div>
 
-          <div className="h-full overflow-hidden border-r border-[#1e3a4a]">
+          <div style={{ gridArea: 'terminal' }}>
              <Terminal />
           </div>
 
-          <div className="h-full overflow-hidden">
-            {/* Will replace the placeholder with the precise stats stacking soon */}
-            <div className="h-full w-full bg-[#0a0f14] flex items-center justify-center text-[#4a6a7a] text-xs">
-              Waiting for Right Panel Redesign...
-            </div>
+          <div style={{ gridArea: 'right', borderRight: 'none' }}>
+            <RightPanel />
+          </div>
+
+          <div style={{ gridArea: 'filesystem', borderLeft: 'none', borderBottom: 'none' }}>
+            <FileBrowser />
           </div>
           
-          <Keyboard visible={oskVisible} onKeyPress={handleKeyPress} />
+          <div style={{ gridArea: 'keyboard', borderRight: 'none', borderBottom: 'none' }}>
+            <Keyboard />
+          </div>
         </div>
       )}
     </>
