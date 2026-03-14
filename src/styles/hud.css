@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary:      #000000;   /* pure black */
+  --bg-panel:        #000000;   /* pure black */
+  --bg-hover:        #0a1a0a;   /* very dark green */
+  --border-color:    #1a3a1a;   /* dim matrix green border */
+  --border-active:   #2a6a2a;   /* brighter green border */
+  --text-primary:    #4aaa4a;   /* bright green */
+  --text-dim:        #2a6a2a;   /* dark green */
+  --text-accent:     #3a7a3a;   /* dim green */
+  --text-terminal:   #4aaa4a;   /* bright green */
+  --cursor-color:    #4aaa4a;   /* bright green */
+  --green-ok:        #2a6a2a;
+  --bar-fill:        #3a7a3a;
+  --bar-bg:          #0a1a0a;
+  --warning:         #7a6a1a;   /* muted yellow */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 0;
+}
+
+/* Global Reset for Border Radius and Glows */
+* {
+  border-radius: 0 !important;
+}
+
+/* Removed old animations and glowing rules */
+
+/* xterm overrides */
+.xterm .xterm-viewport {
+  overflow-y: auto !important;
+}
