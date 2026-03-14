@@ -1,64 +1,78 @@
-
+import { useEffect, useState } from 'react'
 
 export default function TopBar() {
-  const quit = () => {
-    if (window.electronAPI) {
-      window.electronAPI.app.quit();
+  const [sysInfo, setSysInfo] = useState({ hostname: '', ip: '' })
+
+  useEffect(() => {
+    if (window.electronAPI && window.electronAPI.app && window.electronAPI.app.getInfo) {
+      window.electronAPI.app.getInfo().then((info: any) => {
+        setSysInfo({ hostname: info.hostname, ip: info.ip })
+      }).catch(console.error)
     }
-  };
+  }, [])
+
+  const quit = () => {
+    if (window.electronAPI && window.electronAPI.app) {
+      window.electronAPI.app.quit()
+    }
+  }
 
   return (
     <div style={{
       height: '22px',
-      background: '#000800',
+      background: '#050810',
+      borderBottom: '1px solid var(--border)',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '0 10px',
-      borderBottom: '1px solid #0f3a0f',
-      userSelect: 'none'
+      padding: '0 12px',
+      position: 'relative',
+      boxSizing: 'border-box'
     }}>
+      {/* LEFT SECTION */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <span style={{ fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '3px', textTransform: 'uppercase' }}>PANEL</span>
+        <div style={{ width: '1px', height: '12px', background: 'var(--border)' }} />
+        <span style={{ fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '3px', textTransform: 'uppercase' }}>SYSTEM</span>
+      </div>
+
+      {/* CENTER SECTION */}
+      <div style={{
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)'
+      }}>
+        <span style={{ fontSize: '9px', color: 'var(--border-active)', letterSpacing: '3px', textTransform: 'uppercase' }}>TERMINAL</span>
+      </div>
+
+      {/* RIGHT SECTION */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <span style={{ fontSize: '9px', color: 'var(--border-active)', letterSpacing: '3px', textTransform: 'uppercase' }}>MAIN SHELL</span>
+        <div style={{ width: '1px', height: '12px', background: 'var(--border)' }} />
+        <span style={{ fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '3px', textTransform: 'uppercase' }}>PANEL</span>
+        <div style={{ width: '1px', height: '12px', background: 'var(--border)' }} />
+        <span style={{ fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '3px', textTransform: 'uppercase' }}>NETWORK</span>
+        <div style={{ width: '1px', height: '12px', background: 'var(--border)' }} />
+        <button
+           onClick={quit}
+           style={{
+             fontSize: '9px',
+             color: 'var(--text-dim)',
+             border: 'none',
+             background: 'transparent',
+             cursor: 'pointer',
+             padding: '0',
+           }}
+           className="topbar-btn"
+        >
+          ✕
+        </button>
+      </div>
       <style>{`
-        .topbar-section {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-        .topbar-text {
-          font-size: 9px;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-        }
-        .topbar-divider {
-          border-left: 1px solid #0f3a0f;
-          height: 14px;
-          margin: 0 8px;
+        .topbar-btn:hover {
+          color: var(--text-primary) !important;
         }
       `}</style>
-
-      <div className="topbar-section" style={{ justifyContent: 'flex-start', flex: 1 }}>
-        <span className="topbar-text" style={{ color: '#0f5a0f' }}>PANEL</span>
-        <span className="topbar-text" style={{ color: '#0f5a0f' }}>SYSTEM</span>
-      </div>
-
-      <div className="topbar-section" style={{ justifyContent: 'center', gap: 0, flex: 1 }}>
-        <span className="topbar-text" style={{ color: '#1f8a1f' }}>TERMINAL</span>
-      </div>
-
-      <div className="topbar-section" style={{ justifyContent: 'flex-end', flex: 1 }}>
-        <span className="topbar-text" style={{ color: '#1f8a1f' }}>MAIN SHELL</span>
-        <div className="topbar-divider"></div>
-        <span className="topbar-text" style={{ color: '#0f5a0f' }}>PANEL</span>
-        <span className="topbar-text" style={{ color: '#0f5a0f' }}>NETWORK</span>
-        <div className="topbar-divider"></div>
-        <button 
-          onClick={quit}
-          style={{
-            background: 'none', border: 'none', color: '#1f5a1f', fontSize: '10px',
-            cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center'
-          }}
-        >✕</button>
-      </div>
     </div>
   )
 }

@@ -1,244 +1,313 @@
 import { useEffect, useState, useRef } from 'react'
 
-export default function LeftPanel() {
-  const [time, setTime] = useState<Date>(new Date())
-  const [uptime, setUptime] = useState(0)
-  const [platform, setPlatform] = useState('linux')
-  
-  const [sysStats, setSysStats] = useState<any>({
-    cpu: 0,
-    ram: { used: 0, total: 1, percent: 0 },
-    network: { rx: 0, tx: 0 },
-    processes: []
-  })
+const Header = ({ left, right }: { left: string, right?: string }) => (
+  <div style={{
+    fontSize: '9px', letterSpacing: '3px', textTransform: 'uppercase',
+    color: 'var(--text-dim)', padding: '5px 10px',
+    borderBottom: '1px solid var(--border)', background: 'var(--bg-deep)',
+    display: 'flex', justifyContent: 'space-between' /* if no right, it just has left */
+  }}>
+    <span>{left}</span>
+    {right && <span style={{ color: 'var(--text-muted)' }}>{right}</span>}
+  </div>
+)
 
-  // CPU Waveform graph data
-  const [cpuHistory1, setCpuHistory1] = useState<number[]>(Array(100).fill(0))
-  const [cpuHistory2, setCpuHistory2] = useState<number[]>(Array(100).fill(0))
+const Col = ({ label, value }: { label: string, value: string }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+    <span style={{ fontSize: '9px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>{label}</span>
+    <span style={{ fontSize: '9px', color: 'var(--text-value)' }}>{value}</span>
+  </div>
+)
+
+const formatTime = (date: Date) => {
+  return [
+    date.getHours().toString().padStart(2, '0'),
+    date.getMinutes().toString().padStart(2, '0'),
+    date.getSeconds().toString().padStart(2, '0')
+  ].join(':')
+}
+
+export default function LeftPanel() {
+  const [time, setTime] = useState(new Date())
+  const [uptimeStr, setUptimeStr] = useState('00:00:00')
   
-  const canvasRef1 = useRef<HTMLCanvasElement>(null)
-  const canvasRef2 = useRef<HTMLCanvasElement>(null)
+  const [osType, setOsType] = useState('LINUX')
+  const [power, setPower] = useState('AC')
+  
+  const [hw, setHw] = useState({ manufacturer: 'UNKNOWN', model: 'UNKNOWN', chassis: 'DESKTOP' })
+  const [cpuModel, setCpuModel] = useState('CPU')
+  const [temp, setTemp] = useState('0')
+  const [minMax, setMinMax] = useState({ min: '0.00', max: '0.00' })
+  const [tasks, setTasks] = useState('0')
+  
+  const [ram, setRam] = useState({ used: 0, total: 1 })
+  const [swap, setSwap] = useState({ used: 0, total: 1 })
+  
+  const [procs, setProcs] = useState<any[]>([])
+  
+  const [cpu1, setCpu1] = useState(0)
+  const [cpu2, setCpu2] = useState(0)
+
+  const canvas1Ref = useRef<HTMLCanvasElement | null>(null)
+  const canvas2Ref = useRef<HTMLCanvasElement | null>(null)
+  
+  // Historical data for graphs (100 points)
+  const [hist1, setHist1] = useState<number[]>(Array(100).fill(0))
+  const [hist2, setHist2] = useState<number[]>(Array(100).fill(0))
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000)
-    const upTimer = setInterval(() => setUptime(prev => prev + 1), 1000)
-    
-    if (window.electronAPI) {
-      window.electronAPI.app.getInfo().then((info: any) => {
-        setPlatform(info.platform)
-      })
+    // Basic clock
+    const startObj = new Date()
+    const timer = setInterval(() => {
+      const now = new Date()
+      setTime(now)
       
-      const unsubscribe = window.electronAPI.sysinfo.onUpdate((data: any) => {
-        setSysStats(data)
-        
-        // Split CPU load mock into 2 graphs
-        const r = Math.random() * 10 - 5
-        const load1 = Math.max(0, Math.min(100, data.cpu + r))
-        const load2 = Math.max(0, Math.min(100, data.cpu - r))
-        
-        setCpuHistory1(prev => [...prev.slice(1), load1])
-        setCpuHistory2(prev => [...prev.slice(1), load2])
-      })
-      return () => {
-        clearInterval(timer)
-        clearInterval(upTimer)
-        unsubscribe()
-      }
+      // simplistic uptime since app mounted (or we could fetch from os)
+      const diffS = Math.floor((now.getTime() - startObj.getTime()) / 1000)
+      const h = Math.floor(diffS / 3600).toString().padStart(2, '0')
+      const m = Math.floor((diffS % 3600) / 60).toString().padStart(2, '0')
+      const s = Math.floor(diffS % 60).toString().padStart(2, '0')
+      setUptimeStr(`${h}:${m}:${s}`)
+    }, 1000)
+    
+    // Initial static info
+    if (window.electronAPI && window.electronAPI.app && window.electronAPI.app.getInfo) {
+      window.electronAPI.app.getInfo().then((info: any) => {
+        setOsType(info.platform?.toUpperCase() || 'UNKNOWN')
+      }).catch(console.error)
     }
-    return () => {
-      clearInterval(timer)
-      clearInterval(upTimer)
-    }
+
+    return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
-    const drawGraph = (canvasRef: React.RefObject<HTMLCanvasElement | null>, history: number[]) => {
-      const canvas = canvasRef.current
-      if (!canvas) return
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.fillStyle = '#000a00'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      
-      ctx.beginPath()
-      ctx.strokeStyle = '#1f8a1f'
-      ctx.lineWidth = 1
-      
-      const sliceWidth = canvas.width / (history.length - 1)
-      let x = 0
-      
-      for (let i = 0; i < history.length; i++) {
-        const val = history[i]
-        const y = canvas.height - (val / 100) * canvas.height
+    // Telemetry updates
+    if (window.electronAPI && window.electronAPI.sysinfo && window.electronAPI.sysinfo.onUpdate) {
+      const unsubscribe = window.electronAPI.sysinfo.onUpdate((data: any) => {
+        if (!data) return
         
-        if (i === 0) {
-          ctx.moveTo(x, y)
-        } else {
-          ctx.lineTo(x, y)
+        // System / Hardware (we can fake or use data if sent)
+        if (data.system) {
+          setHw({
+            manufacturer: data.system.manufacturer || 'INTEL',
+            model: data.system.model || 'CORE I9',
+            chassis: 'DESKTOP'
+          })
         }
-        x += sliceWidth
-      }
-      ctx.stroke()
-    }
-    drawGraph(canvasRef1, cpuHistory1)
-    drawGraph(canvasRef2, cpuHistory2)
-  }, [cpuHistory1, cpuHistory2])
 
-  const timeStr = time.toLocaleTimeString('en-US', { hour12: false })
-  const month = time.toLocaleString('default', { month: 'short' }).toUpperCase()
-  const day = time.getDate()
-  const year = time.getFullYear()
-  
-  const formatUptime = (sec: number) => {
-    const h = Math.floor(sec / 3600).toString().padStart(2, '0')
-    const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0')
-    const s = Math.floor(sec % 60).toString().padStart(2, '0')
-    return `${h}:${m}:${s}`
+        if (data.cpu) {
+          setCpuModel(data.cpu.brand?.substring(0, 15) || 'UNKNOWN CPU')
+          setMinMax({
+            min: data.cpu.speedMin ? data.cpu.speedMin.toFixed(2) : '0.00',
+            max: data.cpu.speedMax ? data.cpu.speedMax.toFixed(2) : '0.00'
+          })
+        }
+        
+        if (data.cpuCurrentSpeed && data.cpuCurrentSpeed.cores) {
+           // We map core speeds to percentage visually, or if we have cpuData.currentLoad
+           // Let's use data.cpuCurrentSpeed.avg * some scaling if load lacks, 
+           // but sysinfo actually sends currentLoad.cpus usually.
+        }
+        
+        if (data.currentLoad) {
+           const cpus = data.currentLoad.cpus || []
+           const load1 = cpus[0]?.load || 0
+           const load2 = cpus[1]?.load || 0
+           setCpu1(Math.round(load1))
+           setCpu2(Math.round(load2))
+           
+           setHist1(prev => [...prev.slice(1), load1])
+           setHist2(prev => [...prev.slice(1), load2])
+        }
+
+        if (data.cpuTemperature) {
+           setTemp(Math.round(data.cpuTemperature.main || 0).toString())
+        }
+
+        if (data.processes) {
+           setTasks(data.processes.all?.toString() || '0')
+           // top 5 by cpu
+           const list = data.processes.list || []
+           const sorted = [...list].sort((a,b) => b.cpu - a.cpu).slice(0, 5)
+           setProcs(sorted)
+        }
+
+        if (data.mem) {
+           setRam({
+             used: data.mem.used || 0,
+             total: data.mem.total || 1
+           })
+           setSwap({
+             used: data.mem.swapused || 0,
+             total: data.mem.swaptotal || 1
+           })
+        }
+      })
+      return unsubscribe
+    }
+  }, [])
+
+  const drawGraph = (canvasRef: React.RefObject<HTMLCanvasElement | null>, history: number[]) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    
+    // clear
+    ctx.fillStyle = '#080c10'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    // Check bounds
+    // We expect history [0..100], scaling to canvas width = 225
+    ctx.beginPath()
+    ctx.strokeStyle = '#2a6a5a'
+    ctx.lineWidth = 1
+    
+    const step = canvas.width / (history.length - 1)
+    
+    for (let i = 0; i < history.length; i++) {
+       const x = i * step
+       // y scaled (value 0-100 down to canvas height 38)
+       const val = Math.min(100, Math.max(0, history[i]))
+       const y = canvas.height - (val / 100 * canvas.height)
+       
+       if (i === 0) ctx.moveTo(x, y)
+       else ctx.lineTo(x, y)
+    }
+    ctx.stroke()
   }
 
-  const renderMemoryGrid = () => {
-    const totalSquares = 16 * 12; // 192
-    const percent = sysStats.ram.percent || 0;
-    const filledCount = Math.floor((percent / 100) * totalSquares);
-    const squares = [];
-    for (let i = 0; i < totalSquares; i++) {
-      squares.push(
-        <div key={i} style={{
-          width: '3px', height: '3px',
-          background: i < filledCount ? '#0f7a0f' : '#001a00'
-        }}></div>
-      );
-    }
-    return (
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(16, 4px)',
-        gap: '1px',
-        padding: '6px 10px'
-      }}>
-        {squares}
-      </div>
-    );
-  }
+  useEffect(() => {
+    drawGraph(canvas1Ref, hist1)
+    drawGraph(canvas2Ref, hist2)
+  }, [hist1, hist2])
 
-  const avgCpu1 = Math.round(cpuHistory1[cpuHistory1.length - 1] || 0)
-  const avgCpu2 = Math.round(cpuHistory2[cpuHistory2.length - 1] || 0)
+  // Mem dots
+  const totalDots = 192
+  const filledCount = Math.floor((ram.used / ram.total) * totalDots) || 0
+  const dots = Array(totalDots).fill(0).map((_, i) => i < filledCount)
+
+  const swapPct = (swap.used / swap.total) * 100 || 0
+
+  const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '245px', color: '#4aaa4a' }}>
+    <div style={{
+      width: '245px', overflowY: 'auto', borderRight: '1px solid var(--border)',
+      height: '100%', display: 'flex', flexDirection: 'column'
+    }}>
       <style>{`
-        .left-sec { border-bottom: 1px solid #0f3a0f; }
-        .tiny-label { font-size: 9px; color: #1f6a1f; }
-        .tiny-val { font-size: 9px; color: #4aaa4a; }
-        .flex-row { display: flex; flex-direction: row; }
-        .flex-col { display: flex; flex-direction: column; }
+        .sec-b { border-bottom: 1px solid var(--border); }
+        .row-hover:hover { background: var(--bg-hover); }
       `}</style>
       
-      {/* 1. CLOCK */}
-      <div className="left-sec flex-col" style={{ height: '70px', padding: '10px', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ fontSize: '36px', color: '#c9d1d9', letterSpacing: '2px', fontWeight: 300 }}>
-          {timeStr}
+      {/* SECTION A - CLOCK */}
+      <div className="sec-b" style={{ height: '70px', padding: '10px 12px', display: 'flex', alignItems: 'center' }}>
+        <span style={{ fontSize: '36px', color: 'var(--text-primary)', fontWeight: 300, letterSpacing: '2px' }}>
+          {formatTime(time)}
+        </span>
+      </div>
+
+      {/* SECTION B - DATE + META */}
+      <div className="sec-b" style={{ minHeight: '52px', padding: '6px 10px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+          <Col label="YEAR" value={time.getFullYear().toString()} />
+          <Col label="UPTIME" value={uptimeStr} />
+          <Col label="TYPE" value={osType} />
+          <Col label="POWER" value={power} />
+        </div>
+        <div style={{ fontSize: '9px', color: 'var(--text-dim)' }}>
+          {monthNames[time.getMonth()]} {time.getDate()}
         </div>
       </div>
 
-      {/* 2. DATE + SYS INFO */}
-      <div className="left-sec flex-col" style={{ height: '55px', padding: '6px 10px', gap: '4px' }}>
-        <div className="flex-row" style={{ gap: '12px' }}>
-          <div><span className="tiny-label">YEAR: </span><span className="tiny-val">{year}</span></div>
-          <div><span className="tiny-label">UPTIME: </span><span className="tiny-val">{formatUptime(uptime)}</span></div>
+      {/* SECTION C - HW INFO */}
+      <div className="sec-b" style={{ minHeight: '44px', padding: '4px 10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+          <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>MANUFACTURER</span>
+          <span style={{ fontSize: '9px', color: 'var(--text-value)' }}>{hw.manufacturer}</span>
         </div>
-        <div className="flex-row" style={{ gap: '12px' }}>
-          <div><span className="tiny-val" style={{color: '#c9d1d9'}}>{month} {day}</span></div>
-          <div><span className="tiny-label">TYPE: </span><span className="tiny-val uppercase">{platform}</span></div>
-          <div><span className="tiny-label">POWER: </span><span className="tiny-val">AC</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+          <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>MODEL</span>
+          <span style={{ fontSize: '9px', color: 'var(--text-value)' }}>{hw.model}</span>
         </div>
-      </div>
-
-      {/* 3. HARDWARE INFO */}
-      <div className="left-sec flex-col" style={{ height: '40px', padding: '6px 10px', gap: '2px' }}>
-        <div className="flex-row justify-between"><span className="tiny-label">MANUFACTURER</span><span className="tiny-val">ASUSTeK COMPUTER</span></div>
-        <div className="flex-row justify-between"><span className="tiny-label">MODEL</span><span className="tiny-val">G551JK</span></div>
-        <div className="flex-row justify-between"><span className="tiny-label">CHASSIS</span><span className="tiny-val">NOTEBOOK</span></div>
-      </div>
-
-      {/* 4. CPU USAGE */}
-      <div className="left-sec flex-col">
-        <div className="panel-header flex-row justify-between">
-          <span>CPU USAGE</span>
-          <span style={{textTransform: 'none'}}>Intel® Core™ i5-4200H</span>
-        </div>
-        <div style={{ padding: '6px 10px', gap: '6px', display: 'flex', flexDirection: 'column' }}>
-          <div className="flex-row" style={{ gap: '6px', alignItems: 'center' }}>
-            <div className="flex-col" style={{ width: '45px' }}>
-              <span className="tiny-label">#1 - 2</span>
-              <span className="tiny-label">Avg. {avgCpu1}%</span>
-            </div>
-            <canvas ref={canvasRef1} width={170} height={35}></canvas>
-          </div>
-          <div className="flex-row" style={{ gap: '6px', alignItems: 'center' }}>
-            <div className="flex-col" style={{ width: '45px' }}>
-              <span className="tiny-label">#3 - 4</span>
-              <span className="tiny-label">Avg. {avgCpu2}%</span>
-            </div>
-            <canvas ref={canvasRef2} width={170} height={35}></canvas>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+          <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>CHASSIS</span>
+          <span style={{ fontSize: '9px', color: 'var(--text-value)' }}>{hw.chassis}</span>
         </div>
       </div>
 
-      {/* 5. CPU TEMP + TASKS */}
-      <div className="left-sec flex-row justify-between" style={{ height: '35px', padding: '6px 10px', alignItems: 'center' }}>
-        <div className="flex-col items-center"><span className="tiny-label">TEMP</span><span className="tiny-val">62°C</span></div>
-        <div className="flex-col items-center"><span className="tiny-label">MIN</span><span className="tiny-val">2.04GHz</span></div>
-        <div className="flex-col items-center"><span className="tiny-label">MAX</span><span className="tiny-val">3.00GHz</span></div>
-        <div className="flex-col items-center"><span className="tiny-label">TASKS</span><span className="tiny-val">{sysStats.processes ? sysStats.processes.length * 51 : 257}</span></div>
+      {/* SECTION D - CPU */}
+      <div className="sec-b" style={{ paddingBottom: '10px' }}>
+        <Header left="CPU USAGE" right={cpuModel} />
+        <div style={{ padding: '6px 10px 0' }}>
+          {/* Graph 1 */}
+          <div style={{ fontSize: '9px', color: 'var(--text-value)', marginBottom: '2px' }}>#1-2  Avg. {cpu1}%</div>
+          <canvas ref={canvas1Ref} width={225} height={38} style={{ display: 'block', background: 'var(--bg-deep)' }} />
+          
+          {/* Graph 2 */}
+          <div style={{ fontSize: '9px', color: 'var(--text-value)', marginTop: '8px', marginBottom: '2px' }}>#3-4  Avg. {cpu2}%</div>
+          <canvas ref={canvas2Ref} width={225} height={38} style={{ display: 'block', background: 'var(--bg-deep)' }} />
+        </div>
       </div>
 
-      {/* 6. MEMORY */}
-      <div className="left-sec flex-col">
-        <div className="panel-header flex-row justify-between">
-          <span>MEMORY</span>
-          <span>USING {(sysStats.ram.used / 1e9).toFixed(1)} OUT OF {(sysStats.ram.total / 1e9).toFixed(1)} GiB</span>
-        </div>
-        {renderMemoryGrid()}
+      {/* SECTION E - CPU TEMP */}
+      <div className="sec-b" style={{ padding: '6px 10px', display: 'flex', gap: '16px' }}>
+         <Col label="TEMP" value={`${temp}°C`} />
+         <Col label="MIN" value={`${minMax.min}GHz`} />
+         <Col label="MAX" value={`${minMax.max}GHz`} />
+         <Col label="TASKS" value={tasks} />
       </div>
 
-      {/* 7. SWAP BAR */}
-      <div className="left-sec flex-row justify-between items-center" style={{ padding: '6px 10px' }}>
-        <span className="tiny-label">SWAP</span>
-        <div style={{ flex: 1, margin: '0 8px', height: '3px', background: '#001a00', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '15%', background: '#0f5a0f' }}></div>
-        </div>
-        <span className="tiny-val">0.2 GiB</span>
-      </div>
-
-      {/* 8. TOP PROCESSES */}
-      <div className="left-sec flex-col" style={{ borderBottom: 'none' }}>
-        <div className="panel-header" style={{ borderBottom: 'none' }}>
-          TOP PROCESSES <span style={{ float: 'right' }}>PID | NAME | CPU | MEM</span>
-        </div>
-        <div className="flex-col" style={{ padding: '0 10px 10px 10px' }}>
-          {sysStats.processes && sysStats.processes.map((p: any, i: number) => (
-            <div key={i} className="flex-row" style={{ 
-              fontSize: '9px', color: '#3a8a3a', cursor: 'default', padding: '2px 0' 
-            }} onMouseEnter={e => e.currentTarget.style.background = '#001a00'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <div style={{ width: '40px' }}>{Math.floor(Math.random() * 9000 + 1000)}</div>
-              <div style={{ width: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-              <div style={{ width: '40px', textAlign: 'right' }}>{p.cpu.toFixed(1)}%</div>
-              <div style={{ width: '30px', textAlign: 'right' }}>{p.mem.toFixed(1)}%</div>
-            </div>
-          ))}
-          {!sysStats.processes || sysStats.processes.length === 0 && Array(5).fill(0).map((_,i) => (
-            <div key={i} className="flex-row" style={{ fontSize: '9px', color: '#3a8a3a', padding: '2px 0' }}>
-              <div style={{ width: '40px' }}>----</div>
-              <div style={{ width: '90px' }}>-------</div>
-              <div style={{ width: '40px', textAlign: 'right' }}>-.--%</div>
-              <div style={{ width: '30px', textAlign: 'right' }}>-.--%</div>
-            </div>
+      {/* SECTION F - MEMORY DOT MATRIX */}
+      <div className="sec-b" style={{ paddingBottom: '8px' }}>
+        <Header left="MEMORY" right={`USING ${(ram.used/1024/1024/1024).toFixed(1)} OUT OF ${(ram.total/1024/1024/1024).toFixed(1)} GiB`} />
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(16, 4px)', gap: '1px', padding: '8px 10px',
+          justifyContent: 'center'
+        }}>
+          {dots.map((isFilled, idx) => (
+            <div key={idx} style={{
+              width: '3px', height: '3px',
+              background: isFilled ? 'var(--graph-green)' : 'var(--bg-hover)'
+            }} />
           ))}
         </div>
       </div>
+
+      {/* SECTION G - SWAP */}
+      <div className="sec-b" style={{ paddingBottom: '10px' }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px' }}>
+           <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>SWAP</span>
+           <span style={{ fontSize: '9px', color: 'var(--text-dim)' }}>{(swap.used/1024/1024/1024).toFixed(1)} GiB</span>
+         </div>
+         <div style={{ height: '3px', margin: '0 10px', background: 'var(--bg-hover)', position: 'relative' }}>
+           <div style={{
+             position: 'absolute', top: 0, left: 0, height: '100%',
+             width: `${swapPct}%`, background: '#1a4a3a',
+             transition: 'width 500ms linear'
+           }} />
+         </div>
+      </div>
+
+      {/* SECTION H - TOP PROCS */}
+      <div className="sec-b" style={{ paddingBottom: '10px', flex: 1 }}>
+         <Header left="TOP PROCESSES" right="PID | NAME | CPU | MEM" />
+         <div style={{ paddingTop: '6px' }}>
+           {procs.map((p, i) => (
+             <div key={i} className="row-hover" style={{
+               display: 'flex', height: '18px', padding: '0 10px',
+               fontSize: '9px', color: '#6a8a9a', alignItems: 'center'
+             }}>
+               <div style={{ width: '38px' }}>{p.pid}</div>
+               <div style={{ width: '85px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+               <div style={{ width: '40px' }}>{p.cpu.toFixed(1)}%</div>
+               <div style={{ width: '30px' }}>{p.mem.toFixed(1)}%</div>
+             </div>
+           ))}
+         </div>
+      </div>
+
     </div>
   )
 }

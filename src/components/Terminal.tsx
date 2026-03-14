@@ -1,157 +1,186 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Terminal as XTerm } from 'xterm'
+import { FitAddon } from 'xterm-addon-fit'
+import 'xterm/css/xterm.css'
+
+const TABS = [
+  { id: 'term-1', label: 'MAIN SHELL' },
+  { id: 'term-2', label: 'EMPTY' },
+  { id: 'term-3', label: 'EMPTY' },
+  { id: 'term-4', label: 'EMPTY' },
+  { id: 'term-5', label: 'EMPTY' }
+]
 
 export default function Terminal() {
-  const [activeTab, setActiveTab] = useState(0)
-  const tabs = ['MAIN SHELL', 'EMPTY', 'EMPTY', 'EMPTY', 'EMPTY']
-  
-  const termRef = useRef<HTMLDivElement>(null)
+  const [activeTabId, setActiveTabId] = useState('term-1')
   const [cwd, setCwd] = useState('~')
-  const [timeStr, setTimeStr] = useState('')
+  const [stamp, setStamp] = useState('')
 
+  const containerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const termsRef = useRef<{ [key: string]: { term: XTerm, fit: FitAddon } }>({})
+
+  // Time & Ping loop
   useEffect(() => {
-    // We update the bottom right timer roughly simulating the string
     const timer = setInterval(() => {
       const d = new Date()
-      // e.g. "lun. 29 avril 2019 20:27:29 CEST"
-      const pts = d.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' })
-      setTimeStr(`381ms  〈  ${pts}`)
+      const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+      const day = days[d.getDay()]
+      const date = d.getDate().toString().padStart(2, '0')
+      const mo = months[d.getMonth()]
+      const yr = d.getFullYear()
+      const h = d.getHours().toString().padStart(2, '0')
+      const m = d.getMinutes().toString().padStart(2, '0')
+      const s = d.getSeconds().toString().padStart(2, '0')
+      
+      const ping = Math.floor(Math.random() * 20 + 20) // fake static ping for MVP
+      setStamp(`${ping}ms  〈  ${day} ${date} ${mo} ${yr} ${h}:${m}:${s} UTC`)
     }, 1000)
     return () => clearInterval(timer)
   }, [])
 
-  // In a real app we'd spawn multiple ptys and attach them to xterm instances
-  // For this visual rebuild, we maintain the hook for terminal logic that already exists if possible
-  // Or just mock it if we are keeping it simple. But the user said "xterm.js mounted here with theme:"
-  // So let's integrate xterm here. Since Terminal.tsx already had complex logic, we'll recreate the layout and hook up xterm inside.
-  
+  // Terminals spawn logic
   useEffect(() => {
-    import('xterm').then(({ Terminal: XTerm }) => {
-      import('xterm-addon-fit').then(({ FitAddon }) => {
-        if (!termRef.current) return;
-        
-        // Remove old child if any
-        while(termRef.current.firstChild) {
-          termRef.current.removeChild(termRef.current.firstChild);
-        }
+    const initTerm = (id: string) => {
+      if (termsRef.current[id]) return // already mounted
+      const el = containerRefs.current[id]
+      if (!el) return
 
-        const xterm = new XTerm({
-          theme: {
-            background: '#051405',
-            foreground: '#6aba6a',
-            cursor: '#c9d1d9',
-            selectionBackground: '#0f4a0f'
-          },
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 13,
-          lineHeight: 1.2,
-          cursorBlink: true
-        });
+      const term = new XTerm({
+        theme: {
+          background: 'var(--bg-panel)', 
+          foreground: '#9ab4be',
+          cursor: '#c9d1d9', 
+          selectionBackground: '#1a3a4a',
+          black: '#0d1117', red: '#8b3030', green: '#3a6b4a',
+          yellow: '#7a6030', blue: '#2a4a7a', magenta: '#5a3a6a',
+          cyan: '#2a5a72', white: '#c9d1d9', brightBlack: '#3a4a5a',
+          brightWhite: '#d0dce4'
+        },
+        fontSize: 13,
+        fontFamily: "'JetBrains Mono', monospace",
+        lineHeight: 1.2,
+        scrollback: 1000,
+        cursorBlink: true
+      })
 
-        const fitAddon = new FitAddon();
-        xterm.loadAddon(fitAddon);
-        xterm.open(termRef.current);
-        fitAddon.fit();
+      const fitAddon = new FitAddon()
+      term.loadAddon(fitAddon)
+      term.open(el)
+      
+      requestAnimationFrame(() => fitAddon.fit())
 
-        const resizeObserver = new ResizeObserver(() => {
-          fitAddon.fit();
-          if (window.electronAPI && window.electronAPI.terminal) {
-            window.electronAPI.terminal.resize('main', xterm.cols, xterm.rows)
-          }
-        });
-        resizeObserver.observe(termRef.current);
-
+      term.onData(data => {
         if (window.electronAPI && window.electronAPI.terminal) {
-          window.electronAPI.terminal.create('main', xterm.cols, xterm.rows)
-          
-          xterm.onData(data => {
-            window.electronAPI.terminal.input('main', data)
-          })
-          
-          window.electronAPI.terminal.onOutput('main', (data: string) => {
-            xterm.write(data)
-            // very naive cwd parsing for visual effect
-            if (data.includes('@') && data.includes(':')) {
-              const parts = data.split(':');
-              if (parts.length > 1) {
-                const pathPart = parts[1].split('$')[0].split('#')[0].trim();
-                if (pathPart && pathPart.length > 0) setCwd(pathPart);
-              }
-            }
-          })
-        } else {
-          xterm.writeln('Welcome to XTER-UI v2.2.0 - Electron')
-          xterm.writeln('Terminal subsystem offline.')
-          xterm.write('\r\n$ ')
+          window.electronAPI.terminal.input(id, data)
         }
+      })
 
-        return () => {
-          resizeObserver.disconnect();
-          xterm.dispose();
-          if (window.electronAPI && window.electronAPI.terminal) {
-            window.electronAPI.terminal.kill('main')
+      if (window.electronAPI && window.electronAPI.terminal) {
+        window.electronAPI.terminal.create(id)
+        window.electronAPI.terminal.onOutput(id, (data: string) => {
+          term.write(data)
+
+          // Naive CWD extraction
+          if (data.includes('@') && data.includes(':')) {
+            const parts = data.split(':')
+            if (parts.length > 1) {
+              const p = parts[1].split('$')[0].split('#')[0].trim()
+              if (p) setCwd(p)
+            }
           }
-        };
-      });
-    });
-  }, [activeTab]); // simplistic reload on tab switch for this mockup
+        })
+      } else {
+         term.writeln('Welcome to XTER-UI v2.0 - Electron Context Missing')
+         term.writeln(`Terminal ID: ${id}`)
+         term.write('\r\n$ ')
+      }
+
+      termsRef.current[id] = { term, fit: fitAddon }
+    }
+
+    initTerm(activeTabId)
+  }, [activeTabId])
+
+  // Fit addon resize 
+  useEffect(() => {
+    const active = termsRef.current[activeTabId]
+    if (active) setTimeout(() => active.fit.fit(), 10)
+
+    const rs = () => {
+       Object.values(termsRef.current).forEach(t => t.fit.fit())
+    }
+    window.addEventListener('resize', rs)
+    return () => window.removeEventListener('resize', rs)
+  }, [activeTabId])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+    <div style={{
+      display: 'flex', flexDirection: 'column', height: '100%',
+      borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+      background: 'var(--bg-panel)'
+    }}>
       <style>{`
         .term-tab {
           flex: 1;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           font-size: 10px;
           letter-spacing: 2px;
           text-transform: uppercase;
-          border-right: 1px solid #0f3a0f;
+          text-align: center;
+          border-right: 1px solid var(--border);
+          padding: 8px 0;
           cursor: pointer;
-          user-select: none;
-        }
-        .term-tab.inactive {
-          background: #000a00;
-          color: #1f6a1f;
         }
         .term-tab.active {
-          background: #051405;
-          color: #5aca5a;
-          border-top: 2px solid #1f8a1f;
+          background: var(--bg-panel);
+          color: #8ab4be;
+          border-top: 2px solid var(--border-active);
         }
-        .term-tab:last-child {
-          border-right: none;
+        .term-tab.inactive {
+          background: var(--bg-deep);
+          color: var(--text-dim);
+          border-top: 2px solid transparent;
         }
       `}</style>
 
       {/* TABS */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #0f3a0f' }}>
-        {tabs.map((tab, i) => (
-          <div 
-            key={i} 
-            className={`term-tab ${activeTab === i ? 'active' : 'inactive'}`}
-            onClick={() => setActiveTab(i)}
+      <div style={{ display: 'flex', height: '32px' }}>
+        {TABS.map(t => (
+          <div
+            key={t.id}
+            className={`term-tab ${activeTabId === t.id ? 'active' : 'inactive'}`}
+            onClick={() => setActiveTabId(t.id)}
           >
-            {tab}
+            {t.label}
           </div>
         ))}
       </div>
 
-      {/* XTERM */}
-      <div style={{ flex: 1, overflow: 'hidden', padding: '10px' }}>
-        <div ref={termRef} style={{ width: '100%', height: '100%' }}></div>
+      {/* XTERM AREA */}
+      <div style={{ flex: 1, overflow: 'hidden', padding: '10px 10px 0 10px', position: 'relative' }}>
+         {TABS.map(t => (
+           <div
+             key={t.id}
+             ref={el => { containerRefs.current[t.id] = el }}
+             style={{
+               width: '100%', height: '100%',
+               display: activeTabId === t.id ? 'block' : 'none'
+             }}
+           />
+         ))}
       </div>
 
-      {/* BOTTOM STATUS BAR */}
-      <div style={{ 
-        height: '24px', borderTop: '1px solid #0f3a0f', background: '#000a00',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '0 10px', fontSize: '9px'
+      {/* BOTTOM BAR */}
+      <div style={{
+        height: '24px', background: 'var(--bg-deep)',
+        borderTop: '1px solid var(--border)', display: 'flex',
+        justifyContent: 'space-between', alignItems: 'center',
+        padding: '0 12px'
       }}>
-        <div style={{ color: '#1f8a1f' }}>{cwd}/eDEX-UI</div>
-        <div style={{ color: '#1f6a1f' }}>{timeStr}</div>
+        <span style={{ color: 'var(--border-active)', fontSize: '9px' }}>{cwd}</span>
+        <span style={{ color: 'var(--text-dim)', fontSize: '9px' }}>{stamp}</span>
       </div>
+
     </div>
   )
 }
