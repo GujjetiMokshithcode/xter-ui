@@ -32,7 +32,7 @@ export default function LeftPanel() {
   const [uptimeStr, setUptimeStr] = useState('00:00:00')
   
   const [osType, setOsType] = useState('LINUX')
-  const [power, setPower] = useState('AC')
+  const [power] = useState('AC')
   
   const [hw, setHw] = useState({ manufacturer: 'UNKNOWN', model: 'UNKNOWN', chassis: 'DESKTOP' })
   const [cpuModel, setCpuModel] = useState('CPU')
