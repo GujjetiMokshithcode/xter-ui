@@ -10,7 +10,7 @@ XTER-UI is a high-performance desktop product that turns your workstation into a
 
 ---
 
-## ❓ What is XTER-UI?
+## ❓ What it is
 
 XTER-UI is a fullscreen Electron desktop app that combines:
 * a real terminal (through `node-pty` + `xterm.js`)
@@ -19,7 +19,7 @@ XTER-UI is a fullscreen Electron desktop app that combines:
 
 In short: it is a terminal-first desktop experience that looks like a sci-fi command center, but works with your real machine data.
 
-## 🧭 What is it about?
+## 🧭 What it is about
 
 XTER-UI is about giving you one place to:
 * run shell commands in tabbed terminals
@@ -28,21 +28,74 @@ XTER-UI is about giving you one place to:
 
 It is designed for developers, hackers, and Linux/macOS/Windows users who want both function and style in a daily terminal workflow.
 
+## 🛠️ Basics
+
+XTER-UI is built upon modern web and desktop technologies, establishing a robust environment for its sci-fi interface and high-performance operations.
+- **Frontend Engine**: Built with React 19 and styled for structural efficiency using CSS Grid (no rounded corners or shadows, pure 100vw/100vh design).
+- **Desktop Runtime**: Powered by Electron 41+, enabling deep system integration that a standard web browser cannot offer.
+- **Terminal Capabilities**: Uses `node-pty` to spawn real bash/zsh/powershell sessions and `xterm.js` for accurate terminal emulation and ANSI rendering.
+- **System Telemetry**: Uses `systeminformation` in the Node.js backend to stream CPU, Memory, and Network usage data to the visual HUD in real time.
+- **Performance Optimized**: Complex visualizations like CPU waveforms and the 3D globe are drawn on HTML Canvas to maintain a smooth 60fps framerate without choking React renders.
+
+## 🧪 Installation & Setup
+
+This section details how to clone the project, install dependencies, and run XTER-UI locally on your machine.
+
+### Prerequisites
+- **Node.js**: v18.0.0 or higher.
+- **Native Tools**: Required for `node-pty` compilation.
+  - *Linux*: `sudo apt install build-essential python3`
+  - *macOS*: `xcode-select --install`
+  - *Windows*: `npm install --global windows-build-tools`
+
+### Step 1: Clone the Repository
+Clone the repository to your local machine:
+```bash
+git clone https://github.com/GujjetiMokshithcode/xter-ui.git
+cd xter-ui
+```
+
+### Step 2: Install Dependencies
+Install all necessary packages, including the native bindings for `node-pty`:
+```bash
+npm install
+```
+
+### Step 3: Run Development Mode
+To launch the app in hot-reload mode (Vite + Electron):
+```bash
+npm run dev
+```
+
+### Step 4: Build and Package
+To build distributable binaries (AppImage, DMG, NSIS) for your operating system:
+```bash
+npm run build
+```
+Packaged output will be located in the `release/` directory.
+
+### Step 5: Linting
+To check the codebase for syntax and style issues:
+```bash
+npm run lint
+```
+
 ## 🎁 What you get
 
-After starting XTER-UI, you get:
-* boot sequence + immersive sci-fi startup experience
-* 5 tabbed terminal sessions with persistent state
-* live CPU, memory, and network telemetry panels
-* interactive keyboard + file browser + HUD layout
-* cross-platform desktop packaging support (Linux, macOS, Windows)
+After starting XTER-UI, you immediately get:
+* A visually stunning boot sequence with an immersive sci-fi startup experience.
+* 5 independently tabbed terminal sessions that retain their state.
+* Live, accurate CPU, memory, and network telemetry panels.
+* An interactive visual keyboard and native file explorer directly integrated into the HUD layout.
+* Cross-platform support ensuring a consistent experience across Linux, macOS, and Windows.
 
----
+## 📦 What is there
 
-## 📽️ Core Features
+Explore the internal workings and core components of XTER-UI.
 
+### 📽️ Core Features
 *   **⚡ 3-Stage Boot Sequence**: A high-fidelity initialization sequence featuring raw kernel logs, system service mounting, and ASCII logo authentication.
-*   **📐 Structural CSS Grid**: A strict `100vw/100vh` layout engine utilizing `grid-template-areas`. No rounding, no shadows, just pure structural efficiency.
+*   **📐 Structural CSS Grid**: A strict `100vw/100vh` layout engine utilizing `grid-template-areas`.
 *   **📟 Real Terminal Engine**: Powered by `node-pty` and `xterm.js`, providing native shell access with 5 tabbed sessions.
 *   **📊 Live Telemetry**: 
     *   **CPU**: Multi-core waveform visualizations rendered on HTML Canvas.
@@ -51,10 +104,7 @@ After starting XTER-UI, you get:
 *   **⌨️ Interactive Visual Keyboard**: A hardware-mapped virtual keyboard with custom logic for tabbed shell interaction.
 *   **📂 Native File Explorer**: Programmatic icon rendering for folder navigation and disk usage monitoring.
 
----
-
-## 🏗️ Technical Architecture
-
+### 🏗️ Technical Architecture
 XTER-UI follows a strict separation of concerns between the **Electron Main Process** (Backend/Hardware) and the **React Renderer** (Frontend/Display).
 
 ```mermaid
@@ -103,64 +153,7 @@ The visual identity of XTER is non-negotiable.
 #### 4. Terminal Lifecycle
 Terminals are NOT recreated on tab switch. They are initialized once and hidden/shown via `display: none`. This preserves session state. The `FitAddon` must be manually triggered on initialization and window resize.
 
----
-
-## 🧪 Installation & Setup
-
-This section shows exactly how to clone, run, and build XTER-UI.
-
-### Prerequisites
-- **Node.js**: v18.0.0 or higher.
-- **Native Tools**: Required for `node-pty` compilation.
-  - *Linux*: `sudo apt install build-essential python3`
-  - *macOS*: `xcode-select --install`
-  - *Windows*: `npm install --global windows-build-tools`
-
-### Getting Started
-1. **Clone & Install**:
-   ```bash
-   git clone https://github.com/GujjetiMokshithcode/xter-ui.git
-   cd xter-ui
-   npm install
-   ```
-
-2. **Development Mode**:
-   Launch Vite + Electron together:
-   ```bash
-   npm run dev
-   ```
-   **What you get:** hot-reload development mode for fast UI iteration.
-
-3. **Start Electron (without Vite)**:
-   ```bash
-   npm start
-   ```
-   **What you get:** the desktop app launched directly from local build artifacts.
-
-4. **Build Binary**:
-   Create distributable app packages:
-   ```bash
-   npm run build
-   ```
-   **What you get:** packaged output in the `release/` directory (AppImage/DMG/NSIS by platform).
-
-5. **Lint**:
-   ```bash
-   npm run lint
-   ```
-
-### Quick Start (copy/paste)
-
-```bash
-git clone https://github.com/GujjetiMokshithcode/xter-ui.git
-cd xter-ui
-npm install
-npm run dev
-```
-
----
-
-## 📡 IPC API Reference
+### 📡 IPC API Reference
 Access these via `window.electronAPI`:
 
 | Method | Description |
