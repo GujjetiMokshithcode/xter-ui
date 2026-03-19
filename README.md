@@ -1,12 +1,12 @@
 # 🟢 XTER-UI v2.0
 > **The Ultimate Sci-Fi Terminal Emulator & System Monitor.**
 
-[![Electron](https://img.shields.io/badge/Electron-30.0+-blue.svg)](https://www.electronjs.org/)
-[![React](https://img.shields.io/badge/React-18.0+-blue.svg)](https://reactjs.org/)
+[![Electron](https://img.shields.io/badge/Electron-41.0+-blue.svg)](https://www.electronjs.org/)
+[![React](https://img.shields.io/badge/React-19.0+-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-XTER-UI is a high-performance, fullscreen desktop application that transforms your workstation into a futuristic cyberpunk terminal. Heavily inspired by the aesthetics of *eDEX-UI*, it combines real system utilities with a meticulous visual design system.
+XTER-UI is a high-performance desktop product that turns your workstation into a futuristic cyberdeck terminal. Inspired by *eDEX-UI*, it combines real shell access, live system telemetry, and an immersive sci-fi display system for daily terminal workflows.
 
 ---
 
@@ -88,7 +88,7 @@ Terminals are NOT recreated on tab switch. They are initialized once and hidden/
 ### Getting Started
 1. **Clone & Install**:
    ```bash
-   git clone https://github.com/your-repo/xter-ui.git
+   git clone https://github.com/GujjetiMokshithcode/xter-ui.git
    cd xter-ui
    npm install
    ```
@@ -99,10 +99,20 @@ Terminals are NOT recreated on tab switch. They are initialized once and hidden/
    npm run dev
    ```
 
-3. **Build Binary**:
+3. **Start Electron (without Vite)**:
+   ```bash
+   npm start
+   ```
+
+4. **Build Binary**:
    Compress for production:
    ```bash
    npm run build
+   ```
+
+5. **Lint**:
+   ```bash
+   npm run lint
    ```
 
 ---
